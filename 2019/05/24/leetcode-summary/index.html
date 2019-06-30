@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.2',
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="本文总结了  CleanHandBook_v1.0.1.pdf 各题目的解题要点： Chapter 1: Array/String(1-16) Two Sum: 在数据中查找和等于特定值的两个数。 Tips:  HashTable    遍历数组中每个值x，x为key，x的索引index为value 存入 map中。如果只判断是否存在，则用set就可以了。  Two Sum II – Input">
+<meta name="keywords" content="LeetCode,算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CleanHandBook (LeetCode) summary">
+<meta property="og:url" content="https://blog.guopengfei.top/2019/05/24/leetcode-summary/index.html">
+<meta property="og:site_name" content="Silence Fly">
+<meta property="og:description" content="本文总结了  CleanHandBook_v1.0.1.pdf 各题目的解题要点： Chapter 1: Array/String(1-16) Two Sum: 在数据中查找和等于特定值的两个数。 Tips:  HashTable    遍历数组中每个值x，x为key，x的索引index为value 存入 map中。如果只判断是否存在，则用set就可以了。  Two Sum II – Input">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-14T02:36:21.640Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CleanHandBook (LeetCode) summary">
+<meta name="twitter:description" content="本文总结了  CleanHandBook_v1.0.1.pdf 各题目的解题要点： Chapter 1: Array/String(1-16) Two Sum: 在数据中查找和等于特定值的两个数。 Tips:  HashTable    遍历数组中每个值x，x为key，x的索引index为value 存入 map中。如果只判断是否存在，则用set就可以了。  Two Sum II – Input">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Silence Fly" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://blog.guopengfei.top/2019/05/24/leetcode-summary/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>CleanHandBook (LeetCode) summary | Silence Fly</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f986bb689c18864ead2594c5a44c7d8b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Silence Fly</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">坚持三年会有什么收获？干嘛不试试呢？反正都会老三岁。</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">8</span></a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">4</span></a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">8</span></a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.guopengfei.top/2019/05/24/leetcode-summary/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郭鹏飞">
+      <meta itemprop="description" content="明确目标 立足本位 恒常坚持">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Silence Fly">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">CleanHandBook (LeetCode) summary
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-24 18:33:48" itemprop="dateCreated datePublished" datetime="2019-05-24T18:33:48+08:00">2019-05-24</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-14 10:36:21" itemprop="dateModified" datetime="2019-06-14T10:36:21+08:00">2019-06-14</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/编程基础/" itemprop="url" rel="index"><span itemprop="name">编程基础</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文总结了  CleanHandBook_v1.0.1.pdf 各题目的解题要点：</p>
+<h2 id="Chapter-1-Array-String-1-16"><a href="#Chapter-1-Array-String-1-16" class="headerlink" title="Chapter 1: Array/String(1-16)"></a>Chapter 1: Array/String(1-16)</h2><ul>
+<li><p>Two Sum: 在数据中查找和等于特定值的两个数。</p>
+<p>Tips:  HashTable    遍历数组中每个值x，x为key，x的索引index为value 存入 map中。如果只判断是否存在，则用set就可以了。</p>
+</li>
+<li><p>Two Sum II – Input array is sorted: 同上题，但数组是已排序的。</p>
+<p>Tips：前后两个指针 Ai+Aj&gt; target ，减小j; &lt; target 增大i.</p>
+</li>
+<li><p>Two Sum III – Data structure design: 设计一个支持 find (查找Two Sum) 和 add的数据结构。</p>
+<p>Tips：与上题不同的是只判断是否存在两个值，而且可以重复。   用一个hashMap记录值，并且记录值出现的次数。</p>
+</li>
+<li><p>Valid Palindrome: 判断一个字符串是否是回文</p>
+<p>Tips：1）前后两个指针；2）过滤空白字符</p>
+</li>
+<li><p>Implement strstr(): 是否包含某个子串</p>
+</li>
+</ul>
+<p>​     Tips：两层循环，暴力解法。</p>
+<ul>
+<li><p>Reverse Words in a String:  翻转句子中的单词。</p>
+<p>Tips：使用一个StringBuilder；从后向前遍历句子中的单词(空格分割)</p>
+</li>
+<li><p>Reverse Words in a String II: 同上，前后无空格，不使用额外存储。</p>
+<p>Tips：翻转两趟，第一趟把整句所有字符翻转；第二趟，翻转每个单词中的字符。</p>
+</li>
+<li><p>String to Integer (atoi): 字符串转整形</p>
+<p> Tips：负数判断；溢出判断(2147483647)；从高位循环处理</p>
+</li>
+<li><p>Valid Number:  判断是否是合法数字</p>
+<p>Tips：多个部分多个循环单独处理即可。(空格、+/-、数字、小数点、数字、空格)</p>
+</li>
+<li><p><strong>Longest Substring Without Repeating Characters</strong>：</p>
+<p> Tips: 方案一，HashMap 逐步缩小窗口法；方案二，hashMap 记录位置，跳跃缩小窗口法。</p>
+</li>
+<li><p><strong>Longest Substring with At Most Two Distinct Characters</strong> ：</p>
+<p> Tips: 方案一，三个变量，i,k分别是窗口的边界，j记录上次字符变换的位置。方案二，滑动缩小窗口法。</p>
+</li>
+<li><p>Missing Ranges：</p>
+<p> Tips：start -1 ，end+1。</p>
+</li>
+<li><p>Longest Palindromic Substring：</p>
+<p> Tips：遍历回文中心，以中心向外扩张，奇偶两种情况。</p>
+</li>
+<li><p>One Edit Distance：</p>
+<p> Tips: 分情况处理</p>
+</li>
+<li><p>Read N Characters Given Read4：</p>
+<p> Tips:注意文件结束</p>
+</li>
+<li><p>Read N Characters Given Read4 – Call multiple times：</p>
+<p> Tips：上次没用完字符的使用</p>
+</li>
+</ul>
+<h2 id="Chapter-2-Math-17-19"><a href="#Chapter-2-Math-17-19" class="headerlink" title="Chapter 2: Math(17-19)"></a>Chapter 2: Math(17-19)</h2><ol start="17">
+<li>Reverse Integer</li>
+</ol>
+<p>Tips：溢出处理 214748364</p>
+<ol start="17">
+<li>Plus One</li>
+</ol>
+<p>Tips：进位是确定的只会是1，所以从后往前不为9则停止。</p>
+<ol start="17">
+<li>Palindrome Number</li>
+</ol>
+<p>Tips: 先循环找到最高位的位数；</p>
+<h2 id="Chapter-3-Linked-List-20-24"><a href="#Chapter-3-Linked-List-20-24" class="headerlink" title="Chapter 3: Linked List(20-24)"></a>Chapter 3: Linked List(20-24)</h2><ol start="20">
+<li>Merge Two Sorted Lists</li>
+</ol>
+<p>Tips: 基础链表遍历</p>
+<ol start="20">
+<li>Add Two Numbers</li>
+</ol>
+<p>Tips:注意进位</p>
+<ol start="20">
+<li><p>Swap Nodes in Pairs</p>
+<p>Tips：pre,p,q,r四个指针</p>
+</li>
+<li><p>Merge K Sorted Linked Lists</p>
+<p>Tips: 方案一，分治法，每次缩小一半数量；方案二，大小为k的小顶堆。</p>
+</li>
+<li><p>Copy List with Random Pointer</p>
+<p>Tips:  关键是怎样找到原始节点的clone节点；方案一，hashMap法，第一遍遍历，创建各clone节点，第二遍，关联clone节点的random指针；方案二，clone节点插入原节点后面法，第一步，创建各clone节点，第二步，关联random指针，第三步分成两个链表。</p>
+</li>
+</ol>
+<h2 id="Chapter-4-Binary-Tree-25-32"><a href="#Chapter-4-Binary-Tree-25-32" class="headerlink" title="Chapter 4: Binary Tree(25-32)"></a>Chapter 4: Binary Tree(25-32)</h2><ol start="25">
+<li><p>Validate Binary Search Tree</p>
+<p>Tips: 方案一，中序遍历递增；方案二，限定节点取值范围，递归传递范围。null。</p>
+</li>
+<li><p>Maximum Depth of Binary Tree</p>
+<p>Tips: 递归</p>
+</li>
+<li><p>Minimum Depth of Binary Tree</p>
+<p>Tips:递归；注意如果某个子树为空则不参与比较。</p>
+</li>
+<li><p>Balanced Binary Tree：</p>
+<p>Tips: 递归，传递子树深度子树本身是否平衡，可以用-1表示不平衡</p>
+</li>
+<li><p>Convert Sorted Array to Balanced Binary Search Tree</p>
+<p>Tips:二分法，递归</p>
+</li>
+<li><p>Convert Sorted List to Balanced Binary Search Tree</p>
+<p>Tips: 中序遍历，要知道左右子树的节点数，从原始链表中逐个取数。</p>
+</li>
+<li><p>Binary Tree Maximum Path Sum</p>
+<p>Tips: 可能是左右子树联通，也可能向父节点延伸。</p>
+</li>
+<li><p>Binary Tree Upside Down</p>
+<p>Tips: 当成特殊链表；方案一，自顶向下递归 ，方案二，字底向上 迭代。</p>
+</li>
+</ol>
+<h2 id="Chapter-5-Bit-Manipulation-33-34"><a href="#Chapter-5-Bit-Manipulation-33-34" class="headerlink" title="Chapter 5: Bit Manipulation(33-34)"></a>Chapter 5: Bit Manipulation(33-34)</h2><ol start="33">
+<li>Single Number：</li>
+</ol>
+<p>Tips:异或</p>
+<ol start="33">
+<li><p>Single Number II：(出现三次，只有一个出现一次)</p>
+<p>Tips:方案一， 记录各位1的总个数，模3；方案二，三个变量分别记录 ones,twos,threes.</p>
+</li>
+</ol>
+<h2 id="Chapter-6-Misc-35-38"><a href="#Chapter-6-Misc-35-38" class="headerlink" title="Chapter 6: Misc(35-38)"></a>Chapter 6: Misc(35-38)</h2><ol start="35">
+<li><p>Spiral Matrix</p>
+<p>Tips: m,n 记录行、列可以移动的步数；r,l记录当前位置；四个方向单独处理</p>
+</li>
+<li><p>Integer to Roman</p>
+<p>Tips: IV, IX 等当成独立的字符来处理；从大到小除求商即为该字符的个数。</p>
+</li>
+<li><p>Roman to Integer</p>
+<p>Tips: pre如果比当前小，则减去两倍的pre</p>
+</li>
+<li><p>Clone graph</p>
+</li>
+</ol>
+<p>Tips: 记录以及遍历的节点；宽度优先或深度优先</p>
+<h2 id="Chapter-7-Stack-39-41"><a href="#Chapter-7-Stack-39-41" class="headerlink" title="Chapter 7: Stack(39-41)"></a>Chapter 7: Stack(39-41)</h2><ol start="39">
+<li><p>Min Stack</p>
+<p>Tips:push和pop 时注意栈顶元素和min的关系。</p>
+</li>
+<li><p>Evaluate Reverse Polish Notation</p>
+<p>Tips:栈基本操作，遇到操作符就去栈中两个数，求值后再压入栈。</p>
+</li>
+<li><p>Valid Parentheses</p>
+<p>Tips:栈基本操作，HashMap记录括号关联关系，左括号进栈，遇到右括号则与栈顶比较。</p>
+</li>
+</ol>
+<h2 id="Chapter-8-Dynamic-Programming-42-47"><a href="#Chapter-8-Dynamic-Programming-42-47" class="headerlink" title="Chapter 8: Dynamic Programming(42-47)"></a>Chapter 8: Dynamic Programming(42-47)</h2><ol start="42">
+<li>Climbing Stairs</li>
+</ol>
+<p>Tips: 递归、迭代，斐波那契数列</p>
+<ol start="42">
+<li><p>Unique Paths</p>
+<p>Tips:方案一， 递归  方案二，优化递归，使用momeration技术，方案三，自底向上，迭代。</p>
+</li>
+<li><p>Unique Paths II</p>
+<p>Tips: 同上，注意障碍物上路径为0</p>
+</li>
+<li><p>Maximum Sum Subarray</p>
+<p>Tips: f(Ai)= Max(f(Ai-1)+Ai,Ai)</p>
+</li>
+<li><p>Maximum Product Subarray</p>
+</li>
+</ol>
+<p>​    Tips: 记录到位置i的最大值和最小值</p>
+<ol start="42">
+<li>Coins in a Line</li>
+</ol>
+<h2 id="Chapter-9-Binary-Search-48-50"><a href="#Chapter-9-Binary-Search-48-50" class="headerlink" title="Chapter 9: Binary Search(48-50)"></a>Chapter 9: Binary Search(48-50)</h2><ol start="48">
+<li><p>Search Insert Position</p>
+<p>Tips:基本二分法</p>
+</li>
+<li><p>Find Minimum in Sorted Rotated Array</p>
+<p>Tips: 二分法简单变体</p>
+</li>
+<li><p>Find Minimum in Rotated Sorted Array II – with duplicates</p>
+<p>Tips: 如果都相等则只移动一位索引。</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/LeetCode/" rel="tag"># LeetCode</a>
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/21/spark-streaming-in-practice-2/" rel="next" title="Spark Streaming in Practice（二）——读写kafka之读Kafka">
+                <i class="fa fa-chevron-left"></i> Spark Streaming in Practice（二）——读写kafka之读Kafka
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/30/okr-introduction/" rel="prev" title="OKR简介">
+                OKR简介 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">郭鹏飞</p>
+              <div class="site-description motion-element" itemprop="description">明确目标 立足本位 恒常坚持</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:402955610@qq.com" title="E-Mail &rarr; mailto:402955610@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/402955610" title="Wechat &rarr; 402955610"><i class="fa fa-fw fa-wechat"></i>Wechat</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-1-Array-String-1-16"><span class="nav-number">1.</span> <span class="nav-text">Chapter 1: Array/String(1-16)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-2-Math-17-19"><span class="nav-number">2.</span> <span class="nav-text">Chapter 2: Math(17-19)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-3-Linked-List-20-24"><span class="nav-number">3.</span> <span class="nav-text">Chapter 3: Linked List(20-24)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-4-Binary-Tree-25-32"><span class="nav-number">4.</span> <span class="nav-text">Chapter 4: Binary Tree(25-32)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-5-Bit-Manipulation-33-34"><span class="nav-number">5.</span> <span class="nav-text">Chapter 5: Bit Manipulation(33-34)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-6-Misc-35-38"><span class="nav-number">6.</span> <span class="nav-text">Chapter 6: Misc(35-38)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-7-Stack-39-41"><span class="nav-number">7.</span> <span class="nav-text">Chapter 7: Stack(39-41)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-8-Dynamic-Programming-42-47"><span class="nav-number">8.</span> <span class="nav-text">Chapter 8: Dynamic Programming(42-47)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-9-Binary-Search-48-50"><span class="nav-number">9.</span> <span class="nav-text">Chapter 9: Binary Search(48-50)</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郭鹏飞</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      const selection = document.getSelection();
+      const selected = selection.rangeCount > 0 ? selection.getRangeAt(0) : false;
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('复制成功');
+        else $(this).text('复制失败');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+      if (selected) {
+        selection.removeAllRanges();
+        selection.addRange(selected);
+      }
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('复制');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

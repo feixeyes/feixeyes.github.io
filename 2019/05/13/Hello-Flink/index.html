@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.2',
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="我们从官网文档开始，一窥Flink初貌。(https://ci.apache.org/projects/flink/flink-docs-release-1.8/) 在学习Flink时，我们以和spark的对比，作为很重要的一条线来贯穿始终，通过对比两者的异同，来进一步理解分布式计算中需要解决的问题，及其解决方案。">
+<meta name="keywords" content="flink">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探Flink之编程模型">
+<meta property="og:url" content="https://blog.guopengfei.top/2019/05/13/Hello-Flink/index.html">
+<meta property="og:site_name" content="Silence Fly">
+<meta property="og:description" content="我们从官网文档开始，一窥Flink初貌。(https://ci.apache.org/projects/flink/flink-docs-release-1.8/) 在学习Flink时，我们以和spark的对比，作为很重要的一条线来贯穿始终，通过对比两者的异同，来进一步理解分布式计算中需要解决的问题，及其解决方案。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/levels_of_abstraction.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/program_dataflow.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/parallel_dataflow.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/windows.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/event_ingestion_processing_time.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/state_partitioning.svg">
+<meta property="og:updated_time" content="2019-06-14T02:36:21.636Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="初探Flink之编程模型">
+<meta name="twitter:description" content="我们从官网文档开始，一窥Flink初貌。(https://ci.apache.org/projects/flink/flink-docs-release-1.8/) 在学习Flink时，我们以和spark的对比，作为很重要的一条线来贯穿始终，通过对比两者的异同，来进一步理解分布式计算中需要解决的问题，及其解决方案。">
+<meta name="twitter:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/levels_of_abstraction.svg">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Silence Fly" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://blog.guopengfei.top/2019/05/13/Hello-Flink/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>初探Flink之编程模型 | Silence Fly</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f986bb689c18864ead2594c5a44c7d8b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Silence Fly</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">坚持三年会有什么收获？干嘛不试试呢？反正都会老三岁。</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">8</span></a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">4</span></a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">8</span></a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.guopengfei.top/2019/05/13/Hello-Flink/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郭鹏飞">
+      <meta itemprop="description" content="明确目标 立足本位 恒常坚持">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Silence Fly">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">初探Flink之编程模型
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-13 10:03:53" itemprop="dateCreated datePublished" datetime="2019-05-13T10:03:53+08:00">2019-05-13</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-14 10:36:21" itemprop="dateModified" datetime="2019-06-14T10:36:21+08:00">2019-06-14</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术原理/" itemprop="url" rel="index"><span itemprop="name">技术原理</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>我们从官网文档开始，一窥Flink初貌。(<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/" target="_blank" rel="noopener">https://ci.apache.org/projects/flink/flink-docs-release-1.8/</a>)</p>
+<p>在学习Flink时，我们以和spark的对比，作为很重要的一条线来贯穿始终，通过对比两者的异同，来进一步理解分布式计算中需要解决的问题，及其解决方案。</p>
+<a id="more"></a>
+
+<p>Flink官网对其定义如下：        </p>
+<p>Apache Flink is an open source platform for distributed stream and batch data processing.Flink’s core is a streaming dataflow engine that provides data distribution, communication, and fault tolerance for distributed computations over data streams. Flink builds batch processing on top of the streaming engine, overlaying native iteration support, managed memory, and program optimization.</p>
+<p>从上述定义，我们了解到：</p>
+<ol>
+<li>Flink是一个开源的流处理和批处理平台；</li>
+<li>Flink的核心是流处理引擎；</li>
+<li>批处理功能建立在流引擎之上。</li>
+</ol>
+<p><strong>与Spark异同</strong></p>
+<ol>
+<li>从功能定位来看，两者非常非常相似，都同时支持流计算和批处理；</li>
+<li>Spark 把流处理建立在批处理引擎上，流处理是微批处理计算；</li>
+<li>Flink把批处理建立在流处理引擎上，批处理是一个有限流。</li>
+</ol>
+<p>官网文档给出了学习路径建议：</p>
+<ol>
+<li>基础概念学习 (<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/concepts/programming-model.html" target="_blank" rel="noopener">Dataflow Programming Model</a>  和 <a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/concepts/runtime.html" target="_blank" rel="noopener">Distributed Runtime Environment</a> )</li>
+<li>学习导引<ul>
+<li><a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/tutorials/datastream_api.html" target="_blank" rel="noopener">Implement and run a DataStream application</a></li>
+<li><a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/tutorials/local_setup.html" target="_blank" rel="noopener">Setup a local Flink cluster</a></li>
+</ul>
+</li>
+</ol>
+<p>下面我们就按照这个顺利来逐步深入，一窥究竟。</p>
+<h2 id="整体架构分层"><a href="#整体架构分层" class="headerlink" title="整体架构分层"></a>整体架构分层</h2><p>Flink 将整个架构分成如下四层：</p>
+<ul>
+<li>Stateful Stream Processing:  定义了最核心的任务模型和最底层处理函数；</li>
+<li>Core APIs : 定义了批处理和流处理相关的API；</li>
+<li>Table API：定义了一个更高层的面向Table 抽象的API，即数据有schema ，定义了Table上常用的各种操作(select，filter，group by)等；</li>
+<li>SQL ：SQL接口。</li>
+</ul>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/levels_of_abstraction.svg" alt="Programming levels of abstraction"></p>
+<p>与Spark异同</p>
+<ol>
+<li><p>整体结构两者非常类似；</p>
+</li>
+<li><p>Flink中 流处理和批处理更加一致）;</p>
+<ul>
+<li><p>Spark中 基于RDD(最核心模型、批处理)创建了DataFrame（Table API）和Streaming(流处理)又分别在DataFrame和Streaming之上创建了 spark sql 和 struct streaming接口</p>
+</li>
+<li><p>而从上图可以很容易的看出flink对待流处理和批处理的一致性，ps: 阿里在致力于让两者更加一致。</p>
+</li>
+</ul>
+</li>
+<li><p>Flink各层概念及定位更加清晰，可能更两者的发展有关，Spark是慢慢生长出来的，而Flink是阿里在其幼小时（2015年），大刀阔斧的改出来的，这个时期Spark已经是1.4版本（Spark和Flink 各 release版本见附录），其批处理、流处理及DataFrame已经比较完善。</p>
+</li>
+</ol>
+<p>ps: 只是初步印象，待深入研究结论未必如此。</p>
+<h2 id="编程模型"><a href="#编程模型" class="headerlink" title="编程模型"></a>编程模型</h2><p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/program_dataflow.svg" alt="A DataStream program, and its dataflow."></p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/parallel_dataflow.svg" alt="A parallel dataflow"></p>
+<p>Flink的编程模型，主要是 <strong>Stream</strong> 及其上的 <strong>Transformations</strong>， 其中Stream 定义了分布式数据模型，Transformations 定义了 不同的Stream 所支持的各种操作（从上图也可以看出与Spark代码惊人的相似）。  </p>
+<p><strong>与Spark异同</strong></p>
+<ol>
+<li><p>两者及其相似，核心都是分布式数据模型，及其上的操作组成；</p>
+</li>
+<li><p>Spark 将操作分为 Transform(Lazy 操作，定义了数据模型的各种变换) 和 Action(真正触发 Job的执行)；</p>
+</li>
+<li><p>正如两者的核心理念不同，Spark基于批处理RDD模型，Flink 基于流处理 Stream模型。</p>
+</li>
+<li><p>执行时都会将代码生成 DAG（<strong>directed acyclic graphs</strong>）；</p>
+</li>
+<li><p>区分不同的操作依赖上游一个分区或多个分区的情况（Spark中窄依赖和宽依赖，Flink中<strong>One-to-one</strong>和<strong>Redistributing</strong>）。</p>
+</li>
+</ol>
+<p>   思考：两者一个以流计算为核心，一个以批处理为核心，会是两者不可逾越的鸿沟吗？还是最终会渐渐一致？ </p>
+<h2 id="其他概念"><a href="#其他概念" class="headerlink" title="其他概念"></a>其他概念</h2><h3 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h3><p>和批处理不同的是，流处理面对的数据是无限的，所以不能对一个流的所有数据进行处理，因此需要将一个无限流划分出一些有限的窗口，对每个窗口内的数据进行计算。</p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/windows.svg" alt="Time- and Count Windows"></p>
+<ul>
+<li>可以按照时间(如每5秒)也可以按照数据量(如每500条数据)来划分窗口；</li>
+<li>Flink 定义了多种窗口类型以应对不同的业务需求，如 <em>tumbling windows</em> (无重叠), <em>sliding windows</em> (窗口间有重叠), and <em>session windows</em> (定义不活跃时间间隔来划分窗口).</li>
+</ul>
+<h3 id="Time"><a href="#Time" class="headerlink" title="Time"></a>Time</h3><p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/event_ingestion_processing_time.svg" alt="Event Time, Ingestion Time, and Processing Time"></p>
+<p>Flink中可以按照以下三种时间来进行数据对齐处理：</p>
+<ul>
+<li>Event Time： 事件时间，通常是日志中打的行为发生时的时间戳；</li>
+<li>Ingestion Time： 事件进入Flink 的时间；</li>
+<li>Processing Time： Flink任务执行时的本地时间。</li>
+</ul>
+<h3 id="Stateful-Operations"><a href="#Stateful-Operations" class="headerlink" title="Stateful Operations"></a>Stateful Operations</h3><p>有些业务场景中，需要对多条Event记录进行汇总统计，而不是逐条记录单独处理。这种情况下的操作成为 Stateful(有状态)的。</p>
+<p>在实现上，其实Flink维护了一个类似Key-Value的结构来记录各state。</p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.8/fig/state_partitioning.svg" alt="State and Partitioning"></p>
+<h3 id="Checkpoints-容错"><a href="#Checkpoints-容错" class="headerlink" title="Checkpoints 容错"></a>Checkpoints 容错</h3><p>Flink 使用checkpoint和回放（stream replay）机制来做容错机制。</p>
+<p>所谓checkpoint即定时的将数据的镜像进行持久化存储。当遇到故障时，从镜像点开始从新计算数据。</p>
+<p>需要在checkpoint 保存周期和 故障时数据恢复时间之间做一个权衡。</p>
+<h3 id="批处理"><a href="#批处理" class="headerlink" title="批处理"></a>批处理</h3><p>Flink 将批处理当成一种特殊的流(有限的流)，但Flink也有针对批处理的离线特性做一些优化：</p>
+<ul>
+<li>批处理不适用 checkpoint 进行容错，遇到故障时从头（对应分区）计算数据；</li>
+<li>Stateful操作使用 in-memory/out-of-core数据结构，而不是使用 k-v 索引；(需要进一步研究)</li>
+<li>有一些批处理独有的异步API。</li>
+</ul>
+<h2 id="附录一：Spark各版本发布时间"><a href="#附录一：Spark各版本发布时间" class="headerlink" title="附录一：Spark各版本发布时间"></a>附录一：Spark各版本发布时间</h2><table>
+<thead>
+<tr>
+<th align="center">Version</th>
+<th align="center">Original release date</th>
+<th align="center">Latest version</th>
+<th align="center">Release date</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0.5</td>
+<td align="center">2012-06-12</td>
+<td align="center">0.5.1</td>
+<td align="center">2012-10-07</td>
+</tr>
+<tr>
+<td align="center">0.6</td>
+<td align="center">2012-10-14</td>
+<td align="center">0.6.2</td>
+<td align="center">2013-02-07<a href="https://en.wikipedia.org/wiki/Apache_Spark#cite_note-37" target="_blank" rel="noopener">[36]</a></td>
+</tr>
+<tr>
+<td align="center">0.7</td>
+<td align="center">2013-02-27</td>
+<td align="center">0.7.3</td>
+<td align="center">2013-07-16</td>
+</tr>
+<tr>
+<td align="center">0.8</td>
+<td align="center">2013-09-25</td>
+<td align="center">0.8.1</td>
+<td align="center">2013-12-19</td>
+</tr>
+<tr>
+<td align="center">0.9</td>
+<td align="center">2014-02-02</td>
+<td align="center">0.9.2</td>
+<td align="center">2014-07-23</td>
+</tr>
+<tr>
+<td align="center">1.0</td>
+<td align="center">2014-05-26</td>
+<td align="center">1.0.2</td>
+<td align="center">2014-08-05</td>
+</tr>
+<tr>
+<td align="center">1.1</td>
+<td align="center">2014-09-11</td>
+<td align="center">1.1.1</td>
+<td align="center">2014-11-26</td>
+</tr>
+<tr>
+<td align="center">1.2</td>
+<td align="center">2014-12-18</td>
+<td align="center">1.2.2</td>
+<td align="center">2015-04-17</td>
+</tr>
+<tr>
+<td align="center">1.3</td>
+<td align="center">2015-03-13</td>
+<td align="center">1.3.1</td>
+<td align="center">2015-04-17</td>
+</tr>
+<tr>
+<td align="center">1.4</td>
+<td align="center">2015-06-11</td>
+<td align="center">1.4.1</td>
+<td align="center">2015-07-15</td>
+</tr>
+<tr>
+<td align="center">1.5</td>
+<td align="center">2015-09-09</td>
+<td align="center">1.5.2</td>
+<td align="center">2015-11-09</td>
+</tr>
+<tr>
+<td align="center">1.6</td>
+<td align="center">2016-01-04</td>
+<td align="center">1.6.3</td>
+<td align="center">2016-11-07</td>
+</tr>
+</tbody></table>
+<h2 id="附录二：-Flink-各版本发布时间"><a href="#附录二：-Flink-各版本发布时间" class="headerlink" title="附录二： Flink 各版本发布时间"></a>附录二： Flink 各版本发布时间</h2><table>
+<thead>
+<tr>
+<th align="center">Version</th>
+<th align="center">Original release date</th>
+<th align="center">Latest version</th>
+<th align="center">Release date</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0.9</td>
+<td align="center">2015-06-24</td>
+<td align="center">0.9.1</td>
+<td align="center">2015-09-01</td>
+</tr>
+<tr>
+<td align="center">0.10</td>
+<td align="center">2015-11-16</td>
+<td align="center">0.10.2</td>
+<td align="center">2016-02-11</td>
+</tr>
+<tr>
+<td align="center">1.0</td>
+<td align="center">2016-03-08</td>
+<td align="center">1.0.3</td>
+<td align="center">2016-05-11</td>
+</tr>
+<tr>
+<td align="center">1.1</td>
+<td align="center">2016-08-08</td>
+<td align="center">1.1.5</td>
+<td align="center">2017-03-22</td>
+</tr>
+<tr>
+<td align="center">1.2</td>
+<td align="center">2017-02-06</td>
+<td align="center">1.2.1</td>
+<td align="center">2017-04-26</td>
+</tr>
+<tr>
+<td align="center">1.3</td>
+<td align="center">2017-06-01</td>
+<td align="center">1.3.3</td>
+<td align="center">2018-03-15</td>
+</tr>
+<tr>
+<td align="center">1.4</td>
+<td align="center">2017-12-12</td>
+<td align="center">1.4.2</td>
+<td align="center">2018-03-08</td>
+</tr>
+<tr>
+<td align="center">1.5</td>
+<td align="center">2018-05-25</td>
+<td align="center">1.5.6</td>
+<td align="center">2018-12-26</td>
+</tr>
+<tr>
+<td align="center">1.6</td>
+<td align="center">2018-08-08</td>
+<td align="center">1.6.3</td>
+<td align="center">2018-12-22</td>
+</tr>
+<tr>
+<td align="center">1.7</td>
+<td align="center">2018-11-30</td>
+<td align="center">1.7.2</td>
+<td align="center">2019-02-15</td>
+</tr>
+<tr>
+<td align="center"><strong>1.8</strong></td>
+<td align="center">2019-04-09</td>
+<td align="center">1.8.0</td>
+<td align="center">2019-04-09</td>
+</tr>
+</tbody></table>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/flink/" rel="tag"># flink</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/15/spark源码解析alpha-0-1RDD与任务调度/" rel="next" title="spark源码解析alpha-0.1">
+                <i class="fa fa-chevron-left"></i> spark源码解析alpha-0.1
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/15/Spark存储体系详解/" rel="prev" title="Spark存储体系详解">
+                Spark存储体系详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">郭鹏飞</p>
+              <div class="site-description motion-element" itemprop="description">明确目标 立足本位 恒常坚持</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:402955610@qq.com" title="E-Mail &rarr; mailto:402955610@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/402955610" title="Wechat &rarr; 402955610"><i class="fa fa-fw fa-wechat"></i>Wechat</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#整体架构分层"><span class="nav-number">1.</span> <span class="nav-text">整体架构分层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编程模型"><span class="nav-number">2.</span> <span class="nav-text">编程模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他概念"><span class="nav-number">3.</span> <span class="nav-text">其他概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows"><span class="nav-number">3.1.</span> <span class="nav-text">Windows</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Time"><span class="nav-number">3.2.</span> <span class="nav-text">Time</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stateful-Operations"><span class="nav-number">3.3.</span> <span class="nav-text">Stateful Operations</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Checkpoints-容错"><span class="nav-number">3.4.</span> <span class="nav-text">Checkpoints 容错</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#批处理"><span class="nav-number">3.5.</span> <span class="nav-text">批处理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附录一：Spark各版本发布时间"><span class="nav-number">4.</span> <span class="nav-text">附录一：Spark各版本发布时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附录二：-Flink-各版本发布时间"><span class="nav-number">5.</span> <span class="nav-text">附录二： Flink 各版本发布时间</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郭鹏飞</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      const selection = document.getSelection();
+      const selected = selection.rangeCount > 0 ? selection.getRangeAt(0) : false;
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('复制成功');
+        else $(this).text('复制失败');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+      if (selected) {
+        selection.removeAllRanges();
+        selection.addRange(selected);
+      }
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('复制');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>

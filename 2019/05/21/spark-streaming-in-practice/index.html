@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.1.2',
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="记录Spark Streaming开发中的一些经验，有些是在当前理解下的个人总结，可能有失偏颇。无特别说明，下文中Spark 指Spark Streaming 应用。spark Streaming支持很多数据源，如file、socket但无疑Kakfa是其中最重要的streaming数据源，本文会对其重点研究研究。这一块基本思路是，首先看一下Kafka提供的基本的数据读写的API，然后再看一下Sp">
+<meta name="keywords" content="spark,streaming,实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Streaming in Practice（一）——读写kafka之写Kafka">
+<meta property="og:url" content="https://blog.guopengfei.top/2019/05/21/spark-streaming-in-practice/index.html">
+<meta property="og:site_name" content="Silence Fly">
+<meta property="og:description" content="记录Spark Streaming开发中的一些经验，有些是在当前理解下的个人总结，可能有失偏颇。无特别说明，下文中Spark 指Spark Streaming 应用。spark Streaming支持很多数据源，如file、socket但无疑Kakfa是其中最重要的streaming数据源，本文会对其重点研究研究。这一块基本思路是，首先看一下Kafka提供的基本的数据读写的API，然后再看一下Sp">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://kafka.apache.org/images/log_anatomy.png">
+<meta property="og:image" content="https://blog.guopengfei.top/2019/05/21/spark-streaming-in-practice/image-20190521185118875.png">
+<meta property="og:image" content="https://blog.guopengfei.top/2019/05/21/spark-streaming-in-practice/image-20190521162901199.png">
+<meta property="og:updated_time" content="2019-06-14T02:36:21.643Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark Streaming in Practice（一）——读写kafka之写Kafka">
+<meta name="twitter:description" content="记录Spark Streaming开发中的一些经验，有些是在当前理解下的个人总结，可能有失偏颇。无特别说明，下文中Spark 指Spark Streaming 应用。spark Streaming支持很多数据源，如file、socket但无疑Kakfa是其中最重要的streaming数据源，本文会对其重点研究研究。这一块基本思路是，首先看一下Kafka提供的基本的数据读写的API，然后再看一下Sp">
+<meta name="twitter:image" content="http://kafka.apache.org/images/log_anatomy.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Silence Fly" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://blog.guopengfei.top/2019/05/21/spark-streaming-in-practice/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Spark Streaming in Practice（一）——读写kafka之写Kafka | Silence Fly</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f986bb689c18864ead2594c5a44c7d8b";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Silence Fly</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">坚持三年会有什么收获？干嘛不试试呢？反正都会老三岁。</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">8</span></a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">4</span></a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">8</span></a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.guopengfei.top/2019/05/21/spark-streaming-in-practice/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="郭鹏飞">
+      <meta itemprop="description" content="明确目标 立足本位 恒常坚持">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Silence Fly">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark Streaming in Practice（一）——读写kafka之写Kafka
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-21 08:32:49" itemprop="dateCreated datePublished" datetime="2019-05-21T08:32:49+08:00">2019-05-21</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-14 10:36:21" itemprop="dateModified" datetime="2019-06-14T10:36:21+08:00">2019-06-14</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术实践/" itemprop="url" rel="index"><span itemprop="name">技术实践</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>记录Spark Streaming开发中的一些经验，有些是在当前理解下的个人总结，可能有失偏颇。无特别说明，下文中Spark 指Spark Streaming 应用。spark Streaming支持很多数据源，如file、socket但无疑Kakfa是其中最重要的streaming数据源，本文会对其重点研究研究。这一块基本思路是，首先看一下Kafka提供的基本的数据读写的API，然后再看一下Spark对相关API进一步封装提供了哪些功能。</p>
+<a id="more"></a>
+
+<h2 id="Kafka-基本概念"><a href="#Kafka-基本概念" class="headerlink" title="Kafka 基本概念"></a>Kafka 基本概念</h2><p>kafka是一个分布式的消息队列，即可以有生产者和消费者分别发布和订阅消息，kafka对消息进行持久化缓存，以使得生产者和消费者可以异步通信，并支持多个消费者复用消息。就像一个水池，可以有多个上游往水池中注水，也可以有多个下游从水池中取水。</p>
+<ul>
+<li>数据记录：每条数据记录由 key、 value和 timestamp组成。</li>
+<li>kafka Broker: kafka由一到多个server组成，每个server称为Broker；每台机器上可以有一到多个broker，一组broker由zookeeper连接起来组成一个kafka集群。  Client(consumer或producer)和server(broker)通过<strong>TCP</strong>协议通信。</li>
+<li>Topic：kafka定义Topic的概念来提升消息队列的并行度，即从应用上可以认为每个Topic是一个单独的消息队列。</li>
+<li>Partition：像大多数分布式系统一样，kafka引入Partition(分区)来通过并行执行来提升性能（吞吐等），每个Topic会划分为多个partition，不同的partition分配给不同的broker来处理，所以Broker和Partition是多对多的关系。<strong>Produer 可以决定消息的分区规则，来分配到指定的partition</strong>。 注意：consumer的数量不能比partitions多（相同的consumer group），最多只会有partitions个consumer消费数据。</li>
+<li>Replica（副本）: 像大多数分布式系统一样，kafka引入多副本(Replica)来提升系统容错性，即每个partition会有多个副本，遇到故障时保证还有备份数据可用。<strong>每个partition有一个broker作为leader还有0到多个broker作为follower。此处，kafka采用冷备机制，即leader提供数据的读写，follower只是被动的备份数据，只在leader出现故障时，从多个follower中选出新的leader。注意：因为对于不同的broker可以是不同的partition的leader，所以从整体上达到负载均衡的作用，即每个broker都有成为leader提供数据读写的机会</strong></li>
+<li>offset：Partition中的每条Message由offset来表示它在这个partition中的偏移量，这个offset不是该Message在partition数据文件中的实际存储位置，而是逻辑上一个值，它唯一确定了partition中的一条Message。因此，可以认为offset是partition中Message的id。实际上，offset是kafka中唯一的元数据。</li>
+<li>关于数据顺序：kafka只能保证数据在单个partition内是有序的。若只有一个consumer，则能保证Topic级别的有序。</li>
+<li>持久化：kafka会按照设定的生命期缓存所有的消息，其使用文件存储消息(append only log)，为了减少磁盘写入的次数，broker会将消息暂时缓存在内存中，当消息的个数(或尺寸)达到一定阀值时，再flush到磁盘。</li>
+<li>Segment：为了提升消息随机读的性能，kafka将数据文件分割为较小的segment。并通过索引来提升数据查询的性能，索引文件记录了offset对应的文件及具体位置。为了减少存储，offset存储的是相对于第一个offset的相对便宜，并没有存储所有offset的索引，而是有一定间隔的稀疏索引。</li>
+<li>Consumer Group：在kafka中实际的订阅单位其实是consumer group，即每个Topic中的每条记录只会被一个consumer group消费一次。ps:同一个group中的多个consumer可以在不同的机器上。</li>
+</ul>
+<p><img src="http://kafka.apache.org/images/log_anatomy.png" alt="img"></p>
+<h2 id="Kafka-0-8-Vs-0-10"><a href="#Kafka-0-8-Vs-0-10" class="headerlink" title="Kafka 0.8 Vs. 0.10"></a>Kafka 0.8 Vs. 0.10</h2><p>0.10 adds the following over 0.8</p>
+<ul>
+<li>Zookeeper connections are discouraged . From 0.10 there won’t be any zookeeper connections required . All connections for consuming data will be maintained by consumer API</li>
+<li>new unified Consumer API</li>
+<li>reduced client dependence on zookeeper (offsets stored in Kafka topic)</li>
+<li>Kafka Streams API</li>
+<li>Kafka Connect API</li>
+<li>transport encryption using TLS/SSL</li>
+<li>Kerberos/SASL Authentication support</li>
+<li>Access Control Lists</li>
+<li>timestamps on messages</li>
+<li>client interceptors</li>
+<li>lots and lots of bug fixes and improvements</li>
+</ul>
+<p>从上，我们可以看出，0.10版本在0.8版本的基础上除了扩充功能，<strong>主要是对consumer API的重构</strong>。</p>
+<h2 id="Kakfa-Producer-API"><a href="#Kakfa-Producer-API" class="headerlink" title="Kakfa Producer API"></a>Kakfa Producer API</h2><p>Producer API有如下特性：</p>
+<ol>
+<li>有同步和异步两种数据处理方式，用配置producer.type=async/sync来区分，默认是sync。其中异步方式会将数据进行缓存，直到达到缓存时间阈值或batch大小阈值才会进行发送；</li>
+<li>用户自定义数据分区函数；</li>
+<li>用户自定义数据序列化接口；</li>
+</ol>
+<p>在<strong>Kafka 0.8.0 官网文档</strong>上说 可以使用zookeeper来支持 broker的发现，但是在<strong>0.8.0 Producer Example</strong> 文档中，又推荐使用的是<strong>metadata.broker.list</strong> 参数。</p>
+<img src="/2019/05/21/spark-streaming-in-practice/image-20190521185118875.png">
+
+<p>经测试验证，应该使用<strong>metadata.broker.list</strong> 否则会报缺少参数。 </p>
+<p>配置的时候不需要配置所有的brokerlist，只需要配置两个(容错)就可以了，kafka会自动做负载均衡，选出合适的leader。</p>
+<h2 id="Spark-写Kafka"><a href="#Spark-写Kafka" class="headerlink" title="Spark 写Kafka"></a>Spark 写Kafka</h2><p>spark streaming/spark写Kafka的一个可行方法是，对每个executor 调用创建Kafka Producer 客户端，各分区单独发送数据，样例大体结构如下：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs scala">result.foreachRDD&#123;rdd=&gt;<br>  rdd.foreachPartition&#123; iter=&gt;<br>    <span class="hljs-comment">// 调用kafka Producer 发送数据</span><br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但需要注意Producer 实例尽量复用，以提升性能。</p>
+<p>Cloudera封装好了一个工具帮我们完成该过程，(原始代码已经找不到，是否复用Producer实例未验证)，该工具其实是从 <a href="https://issues.apache.org/jira/browse/SPARK-4122" target="_blank" rel="noopener">Jira-4-22</a> 拆分出来的。Maven坐标如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.cloudera.spark.streaming.kafka<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spark-kafka-writer<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.1.0<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>从<a href="https://mvnrepository.com/artifact/org.cloudera.spark.streaming.kafka/spark-kafka-writer" target="_blank" rel="noopener">MavenPository</a> 中看到，最新的版本还是0.1.0，更新日期是 2015年，不确定是有更好的方案还是什么原因，造成该工具一直没有升级。</p>
+<img src="/2019/05/21/spark-streaming-in-practice/image-20190521162901199.png">
+
+
+
+<p>源码：<a href="https://github.com/harishreedharan/spark-streaming-kafka-output" target="_blank" rel="noopener">https://github.com/harishreedharan/spark-streaming-kafka-output</a></p>
+<p>ps: 该项目描述中标注了 “Move to org.cloudera “，所以这很大的可能性是该工具的源码。从代码可以看到，其实现跟上述分析的方案一致。</p>
+<p>如下代码样例，该工具封装了隐式转换，导入后DStream类型会添加 <em>writeToKafka</em> 函数，并且用户自己添加自定义的<strong>分区函数</strong>。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs scala"><span class="hljs-keyword">import</span> org.cloudera.spark.streaming.kafka.<span class="hljs-type">KafkaWriter</span>._<br><br>stream.writeToKafka(producerConf,<br>            (x: <span class="hljs-type">String</span>) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-type">KeyedMessage</span>[<span class="hljs-type">String</span>, <span class="hljs-type">String</span>](topic,<span class="hljs-type">DigestUtils</span>.md5Hex(x), x))<br></code></pre></td></tr></table></figure>
+
+<p>kafka的config会透传下去，到kafka原生Producer API。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><p><a href="https://www.cnblogs.com/seaspring/p/6138080.html" target="_blank" rel="noopener">Kafka：架构简介【转】</a></p>
+</li>
+<li><p><a href="https://www.cnblogs.com/yurunmiao/p/5550906.html" target="_blank" rel="noopener">Kafka Topic Partition Replica Assignment实现原理及资源隔离方案</a></p>
+</li>
+<li><p><a href="http://kafka.apache.org/08/documentation.html" target="_blank" rel="noopener">Kafka 0.8.0 官网文档</a></p>
+</li>
+<li><p><a href="https://cwiki.apache.org/confluence/display/KAFKA/0.8.0+Producer+Example" target="_blank" rel="noopener">0.8.0 Producer Example</a></p>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spark/" rel="tag"># spark</a>
+          
+            <a href="/tags/streaming/" rel="tag"># streaming</a>
+          
+            <a href="/tags/实践/" rel="tag"># 实践</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/15/Spark存储体系详解/" rel="next" title="Spark存储体系详解">
+                <i class="fa fa-chevron-left"></i> Spark存储体系详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/21/spark-streaming-in-practice-2/" rel="prev" title="Spark Streaming in Practice（二）——读写kafka之读Kafka">
+                Spark Streaming in Practice（二）——读写kafka之读Kafka <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">郭鹏飞</p>
+              <div class="site-description motion-element" itemprop="description">明确目标 立足本位 恒常坚持</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:402955610@qq.com" title="E-Mail &rarr; mailto:402955610@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="/402955610" title="Wechat &rarr; 402955610"><i class="fa fa-fw fa-wechat"></i>Wechat</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka-基本概念"><span class="nav-number">1.</span> <span class="nav-text">Kafka 基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka-0-8-Vs-0-10"><span class="nav-number">2.</span> <span class="nav-text">Kafka 0.8 Vs. 0.10</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kakfa-Producer-API"><span class="nav-number">3.</span> <span class="nav-text">Kakfa Producer API</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spark-写Kafka"><span class="nav-number">4.</span> <span class="nav-text">Spark 写Kafka</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">郭鹏飞</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+<script>
+  $('.highlight').not('.gist .highlight').each(function(i, e) {
+    var $wrap = $('<div>').addClass('highlight-wrap');
+    $(e).after($wrap);
+    $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function(e) {
+      var code = $(this).parent().find('.code').find('.line').map(function(i, e) {
+        return $(e).text();
+      }).toArray().join('\n');
+      var ta = document.createElement('textarea');
+      var yPosition = window.pageYOffset || document.documentElement.scrollTop;
+      ta.style.top = yPosition + 'px'; // Prevent page scroll
+      ta.style.position = 'absolute';
+      ta.style.opacity = '0';
+      ta.readOnly = true;
+      ta.value = code;
+      document.body.appendChild(ta);
+      const selection = document.getSelection();
+      const selected = selection.rangeCount > 0 ? selection.getRangeAt(0) : false;
+      ta.select();
+      ta.setSelectionRange(0, code.length);
+      ta.readOnly = false;
+      var result = document.execCommand('copy');
+      
+        if (result) $(this).text('复制成功');
+        else $(this).text('复制失败');
+      
+      ta.blur(); // For iOS
+      $(this).blur();
+      if (selected) {
+        selection.removeAllRanges();
+        selection.addRange(selected);
+      }
+    })).on('mouseleave', function(e) {
+      var $b = $(this).find('.copy-btn');
+      setTimeout(function() {
+        $b.text('复制');
+      }, 300);
+    }).append(e);
+  })
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
