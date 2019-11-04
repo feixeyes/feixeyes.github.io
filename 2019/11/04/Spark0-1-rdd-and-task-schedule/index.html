@@ -99,7 +99,7 @@
   <meta name="description" content="从大数据的Hello World说起Spark 是一个大数据（分布式）计算框架，我们从大数据计算的hello world （word count）来看一下spark 的基本思想。 Word Count问题，即输入一份文档文件，计算文档中各单词的个数。 这是一个简单的计数问题，不考虑数据量，一种简单的解决方法是利用一个Map结构，各单词作key，各单词出现的次数作为value，逐个处理各单词，对各单">
 <meta name="keywords" content="spark,源码">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spark0.1-rdd-and-task-schedule">
+<meta property="og:title" content="Spark0.1源码学习之-编程模型和任务调度">
 <meta property="og:url" content="https://blog.guopengfei.top/2019/11/04/Spark0-1-rdd-and-task-schedule/index.html">
 <meta property="og:site_name" content="Silence Fly">
 <meta property="og:description" content="从大数据的Hello World说起Spark 是一个大数据（分布式）计算框架，我们从大数据计算的hello world （word count）来看一下spark 的基本思想。 Word Count问题，即输入一份文档文件，计算文档中各单词的个数。 这是一个简单的计数问题，不考虑数据量，一种简单的解决方法是利用一个Map结构，各单词作key，各单词出现的次数作为value，逐个处理各单词，对各单">
@@ -113,9 +113,9 @@
 <meta property="og:image" content="https://tva1.sinaimg.cn/large/006y8mN6ly1g8ly09rme9j30eq09mjrl.jpg">
 <meta property="og:image" content="https://tva1.sinaimg.cn/large/006y8mN6ly1g8ly05fsgpj30iz09i3yu.jpg">
 <meta property="og:image" content="https://tva1.sinaimg.cn/large/006y8mN6ly1g8ly010hsmj30bg0bnmyl.jpg">
-<meta property="og:updated_time" content="2019-11-04T10:01:07.993Z">
+<meta property="og:updated_time" content="2019-11-04T10:12:14.785Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spark0.1-rdd-and-task-schedule">
+<meta name="twitter:title" content="Spark0.1源码学习之-编程模型和任务调度">
 <meta name="twitter:description" content="从大数据的Hello World说起Spark 是一个大数据（分布式）计算框架，我们从大数据计算的hello world （word count）来看一下spark 的基本思想。 Word Count问题，即输入一份文档文件，计算文档中各单词的个数。 这是一个简单的计数问题，不考虑数据量，一种简单的解决方法是利用一个Map结构，各单词作key，各单词出现的次数作为value，逐个处理各单词，对各单">
 <meta name="twitter:image" content="https://tva1.sinaimg.cn/large/006y8mN6ly1g8iwbamz5wj30y60p079f.jpg">
 
@@ -137,7 +137,7 @@
   };
 </script>
 
-  <title>Spark0.1-rdd-and-task-schedule | Silence Fly</title>
+  <title>Spark0.1源码学习之-编程模型和任务调度 | Silence Fly</title>
   
 
 
@@ -404,7 +404,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Spark0.1-rdd-and-task-schedule
+          <h1 class="post-title" itemprop="name headline">Spark0.1源码学习之-编程模型和任务调度
 
               
             
@@ -430,7 +430,7 @@
                 
               
 
-              <time title="创建时间：2019-11-04 17:59:00 / 修改时间：18:01:07" itemprop="dateCreated datePublished" datetime="2019-11-04T17:59:00+08:00">2019-11-04</time>
+              <time title="创建时间：2019-11-04 17:59:00 / 修改时间：18:12:14" itemprop="dateCreated datePublished" datetime="2019-11-04T17:59:00+08:00">2019-11-04</time>
             
 
             
@@ -440,6 +440,24 @@
             
           </span>
 
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术原理/" itemprop="url" rel="index"><span itemprop="name">技术原理</span></a></span>
+
+                
+                
+              
+            </span>
           
 
           
